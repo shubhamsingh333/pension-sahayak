@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { centreQuerySchema } from "@/lib/service-centres";
 import { centreDirectory } from "@/lib/server/service-centres";
 import { apiError, parseInput } from "@/lib/server/http";
+export const dynamic = "force-dynamic";
+
 export function GET(request: Request) {
   try {
     const query = parseInput(
@@ -16,8 +18,7 @@ export function GET(request: Request) {
           retrievedAt: centreDirectory.retrievedAt,
         },
       },
-      // The list only changes with a deploy, and Netlify purges its CDN cache on deploy.
-      { headers: { "Cache-Control": "public, max-age=300, s-maxage=86400" } },
+      { headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {
     return apiError(error);

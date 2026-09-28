@@ -35,7 +35,7 @@ flowchart LR
 | `/[lang]/grievance` | Server-rendered per request (reads `?reference=`) | No (the page itself) |
 | `GET /api/health` | Function | Yes (ping) |
 | `POST /api/pension` | Function | No (mock record) |
-| `GET /api/service-centres?q=&type=&offset=` | Function (CDN-cached) | No (SPARSH list bundled with the app) |
+| `GET /api/service-centres?q=&type=&offset=` | Function | No (SPARSH list bundled with the app) |
 | `POST /api/grievances` | Function | Yes (insert) |
 | `GET /api/grievances/:reference` | Function | Yes (read) |
 
