@@ -1,0 +1,84 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: 22
+  NETLIFY_CLI_VERSION: 27.10.1
+  NEXT_TELEMETRY_DISABLED: 1
+
+jobs:
+  checks:
+    name: Lint, test, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+      # Runs after build so Next.js generated route types exist.
+      - run: npm run typecheck
+
+  deploy:
+    name: Deploy to Netlify
+    needs: checks
+    # Forked PRs cannot read secrets, so only deploy from this repository.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.event_name == 'pull_request' && 'preview' || 'production' }}
+      url: ${{ steps.deploy.outputs.url }}
+    env:
+      NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+      NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - name: Check Netlify secrets
+        run: |
+          if [ -z "$NETLIFY_AUTH_TOKEN" ] || [ -z "$NETLIFY_SITE_ID" ]; then
+            echo "::error::Add NETLIFY_AUTH_TOKEN and NETLIFY_SITE_ID as repository secrets."
+            exit 1
+          fi
+      - name: Choose deploy target
+        id: target
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "context=deploy-preview" >> "$GITHUB_OUTPUT"
+            echo "flags=--alias=pr-${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "context=production" >> "$GITHUB_OUTPUT"
+            echo "flags=--prod" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Build with Netlify
+        run: npx --yes "netlify-cli@${NETLIFY_CLI_VERSION}" build --context=${{ steps.target.outputs.context }}
+      - name: Deploy
+        id: deploy
+        run: |
+          npx --yes "netlify-cli@${NETLIFY_CLI_VERSION}" deploy --no-build \
+            --context=${{ steps.target.outputs.context }} ${{ steps.target.outputs.flags }} \
+            --message="${{ github.sha }}" --json > deploy.json
+          url=$(node -p "const d=require('./deploy.json'); d.url || d.deploy_url")
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Deployed: $url" >> "$GITHUB_STEP_SUMMARY"
