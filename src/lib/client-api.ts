@@ -8,13 +8,18 @@ export class ApiRequestError extends Error {
     super(message);
   }
 }
-export async function apiRequest<T>(url: string, body?: unknown): Promise<T> {
+/** GET when there is no body, POST JSON otherwise. Pass `signal` to cancel stale requests. */
+export async function apiRequest<T>(
+  url: string,
+  { body, signal }: { body?: unknown; signal?: AbortSignal } = {},
+): Promise<T> {
+  const timeout = AbortSignal.timeout(12000);
   const response = await fetch(url, {
     method: body === undefined ? "GET" : "POST",
     headers:
       body === undefined ? undefined : { "Content-Type": "application/json" },
     body: body === undefined ? undefined : JSON.stringify(body),
-    signal: AbortSignal.timeout(12000),
+    signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
   });
   const result = await response.json();
   if (!response.ok)

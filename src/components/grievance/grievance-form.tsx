@@ -65,10 +65,12 @@ export function GrievanceForm() {
             try {
               setReceipt(
                 await apiRequest<Receipt>("/api/grievances", {
-                  category: data.get("category"),
-                  subject: data.get("subject"),
-                  description: data.get("description"),
-                  demoConsent: data.get("demoConsent") === "on",
+                  body: {
+                    category: data.get("category"),
+                    subject: data.get("subject"),
+                    description: data.get("description"),
+                    demoConsent: data.get("demoConsent") === "on",
+                  },
                 }),
               );
             } catch (error) {

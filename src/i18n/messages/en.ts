@@ -1,5 +1,5 @@
 import type { ApiErrorCode } from "@/lib/api-errors";
-import type { CentreId, CentreService } from "@/lib/centres";
+import type { CentreFilter, CentreType } from "@/lib/service-centres";
 import type { GrievanceCategory, GrievanceStatus } from "@/lib/validation";
 import type {
   Branch,
@@ -74,8 +74,8 @@ export const en = {
     centresBanner: {
       title: "Prefer a helping hand?",
       description:
-        "Explore the sample service-centre directory and see the support available.",
-      cta: "Explore demo centres",
+        "Search {count} official SPARSH service centres, from Defence Accounts offices to partner banks.",
+      cta: "Find a service centre",
     },
     faqEyebrow: "A few helpful answers",
     faqTitle: "Before you get started",
@@ -211,7 +211,7 @@ export const en = {
     doneTitle: "You have a clearer next step.",
     download: "Download checklist",
     createGrievance: "Create a demo grievance",
-    exploreCentres: "Explore sample service centres",
+    exploreCentres: "Find a service centre near you",
     back: "Back",
     buildChecklist: "Build my checklist",
     seeNextSteps: "See next steps",
@@ -296,53 +296,35 @@ export const en = {
   >,
   centresPage: {
     eyebrow: "A helping hand nearby",
-    title: "Explore service centres.",
+    title: "Find a SPARSH service centre.",
     description:
-      "Search a fictional directory to see how in-person support could be presented. These are sample locations, not an official service-centre listing.",
+      "Search {count} official SPARSH service centres run by the Defence Accounts Department and partner banks, by city, district, PIN code or name.",
   },
   centreSearch: {
-    label: "Search by city or support type",
-    placeholder: "Try Pune, family pension or PPO support",
+    label: "Search by city, district, PIN code or name",
+    placeholder: "Try Pune, 411001 or PCDA",
+    hint: "Names and addresses are shown in English, as published by SPARSH.",
+    filterLabel: "Show",
+    filters: {
+      all: "All",
+      defence: "Defence Accounts offices",
+      bank: "Partner banks",
+    } satisfies Record<CentreFilter, string>,
     found: {
-      one: "{count} sample centre found",
-      other: "{count} sample centres found",
+      one: "{count} service centre found",
+      other: "{count} service centres found",
     },
-    fictional: "All locations are fictional",
-    badge: "Demo location",
-    disclaimer:
-      "Illustration only. Do not travel to this location. No appointment or contact service is connected.",
-    empty: "No sample centres match your search.",
+    showing: "showing {shown}",
+    searching: "Searching…",
+    badges: { defence: "Defence Accounts office", bank: "Partner bank" } satisfies Record<CentreType, string>,
+    phone: "Phone: {phone}",
+    map: "Open in Maps",
+    more: "Show more",
+    empty: "No service centres match your search.",
     clear: "Clear search",
+    source: "Source: SPARSH Service Centre Locator, updated {date}.",
+    callAhead: "Please call before visiting. Timings and services can change.",
   },
-  centres: {
-    "demo-delhi": {
-      city: "New Delhi",
-      name: "Delhi demo assistance desk",
-      address: "Illustrative location · Central Delhi",
-    },
-    "demo-pune": {
-      city: "Pune",
-      name: "Pune demo assistance desk",
-      address: "Illustrative location · Pune city",
-    },
-    "demo-lucknow": {
-      city: "Lucknow",
-      name: "Lucknow demo assistance desk",
-      address: "Illustrative location · Lucknow city",
-    },
-    "demo-bengaluru": {
-      city: "Bengaluru",
-      name: "Bengaluru demo assistance desk",
-      address: "Illustrative location · Bengaluru city",
-    },
-  } satisfies Record<CentreId, { city: string; name: string; address: string }>,
-  centreServices: {
-    ppo: "PPO support",
-    "family-pension": "Family pension",
-    payment: "Payment support",
-    "life-certificate": "Life certificate",
-  } satisfies Record<CentreService, string>,
-  centreHours: "Sample hours: Mon–Fri, 10:00–16:00",
   about: {
     eyebrow: "DAD Day prototype",
     title: "Built to make the next step simpler.",
@@ -350,7 +332,7 @@ export const en = {
       "Pension Sahayak is an independent demonstration of a more approachable pension-help experience.",
     worksTitle: "What works in this prototype",
     worksBody:
-      "Guided pension journeys, downloadable sample checklists, a fictional service-centre directory, a mock PPO lookup, and saved grievances with tracking references.",
+      "Guided pension journeys, downloadable sample checklists, the official SPARSH service-centre directory, a mock PPO lookup, and saved grievances with tracking references.",
     notice:
       "There are no real government API connections. This is not endorsed by DAD, PCDA, SPARSH or any government agency. No official application, payment, grievance or appointment is submitted.",
     dataTitle: "Your demo information",

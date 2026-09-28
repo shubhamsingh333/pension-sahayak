@@ -1,13 +1,25 @@
 import { NextResponse } from "next/server";
-import { en } from "@/i18n/messages/en";
-import { filterCentres, localizeCentres } from "@/lib/centres";
-const directory = localizeCentres(en);
+import { centreQuerySchema } from "@/lib/service-centres";
+import { centreDirectory } from "@/lib/server/service-centres";
+import { apiError, parseInput } from "@/lib/server/http";
 export function GET(request: Request) {
-  const query = (new URL(request.url).searchParams.get("q") ?? "").slice(0, 80);
-  return NextResponse.json({
-    data: filterCentres(directory, query).map(
-      ({ searchText, ...centre }) => centre,
-    ),
-    demo: true,
-  });
+  try {
+    const query = parseInput(
+      centreQuerySchema,
+      Object.fromEntries(new URL(request.url).searchParams),
+    );
+    return NextResponse.json(
+      {
+        data: centreDirectory.search(query),
+        source: {
+          url: centreDirectory.source,
+          retrievedAt: centreDirectory.retrievedAt,
+        },
+      },
+      // The list only changes with a deploy, and Netlify purges its CDN cache on deploy.
+      { headers: { "Cache-Control": "public, max-age=300, s-maxage=86400" } },
+    );
+  } catch (error) {
+    return apiError(error);
+  }
 }

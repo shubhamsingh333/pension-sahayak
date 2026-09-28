@@ -9,11 +9,17 @@ import {
 } from "lucide-react";
 import { LocalizedLink as Link } from "@/components/localized-link";
 import { ServiceCard } from "@/components/service-card";
+import { intlLocales } from "@/i18n/config";
+import { format } from "@/i18n/format";
 import { getI18n } from "@/i18n/server";
+import { centreDirectory } from "@/lib/server/service-centres";
 import { branches, workflows } from "@/lib/workflows";
 export default async function Home() {
-  const { t } = await getI18n();
+  const { locale, t } = await getI18n();
   const { home } = t;
+  const centreCount = new Intl.NumberFormat(intlLocales[locale]).format(
+    centreDirectory.total,
+  );
   return (
     <div className="shell">
       <section className="grid gap-10 py-12 lg:grid-cols-[1.2fr_1fr] lg:items-center lg:gap-16 lg:py-16">
@@ -146,7 +152,7 @@ export default async function Home() {
           <div>
             <h2 className="text-xl font-bold">{home.centresBanner.title}</h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              {home.centresBanner.description}
+              {format(home.centresBanner.description, { count: centreCount })}
             </p>
           </div>
         </div>

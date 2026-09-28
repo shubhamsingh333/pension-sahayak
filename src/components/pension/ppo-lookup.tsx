@@ -23,7 +23,7 @@ export function PpoLookup() {
           setData(null);
           setBusy(true);
           try {
-            setData(await apiRequest<PensionRecord>("/api/pension", { ppo }));
+            setData(await apiRequest<PensionRecord>("/api/pension", { body: { ppo } }));
           } catch (e) {
             setError(errorMessage(e, t.errors));
           } finally {

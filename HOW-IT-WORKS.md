@@ -35,7 +35,7 @@ flowchart LR
 | `/[lang]/grievance` | Server-rendered per request (reads `?reference=`) | No (the page itself) |
 | `GET /api/health` | Function | Yes (ping) |
 | `POST /api/pension` | Function | No (mock record) |
-| `GET /api/service-centres?q=` | Function | No (built-in list) |
+| `GET /api/service-centres?q=&type=&offset=` | Function (CDN-cached) | No (SPARSH list bundled with the app) |
 | `POST /api/grievances` | Function | Yes (insert) |
 | `GET /api/grievances/:reference` | Function | Yes (read) |
 
@@ -320,38 +320,65 @@ The status always stays **Received**: there is no case-management layer or statu
 
 ---
 
-## 7. Example E: service-centre search
+## 7. Example E: finding a real SPARSH service centre
 
-**Scenario:** the visitor types a query on `/service-centre`.
+The directory is the official **SPARSH Service Centre Locator** list: 10,399 centres, 188 of them Defence Accounts Department offices and the rest partner bank branches. `npm run update:centres` downloads it from [sparsh.defencepension.gov.in](https://sparsh.defencepension.gov.in/?page=serviceCentreLocator), cleans it and saves it to [src/data/service-centres.json](src/data/service-centres.json). SPARSH's "DAD" name prefix and contact-person names are dropped; office phone numbers are kept.
+
+**Scenario:** a visitor looks for a Defence Accounts office in Pune.
 
 ```mermaid
-flowchart LR
-    A["Type in search box"] --> B["For each of the 4 built-in centres:<br/>city + services, lowercased"]
-    B --> C{"Contains the query?"}
-    C -->|"yes"| D["Show card"]
-    C -->|"no"| E["Hide"]
-    D --> F["'N sample centres found'"]
-    E --> F
-    F -->|"0 results"| G["'Clear search' button"]
+flowchart TD
+    A["Open /en/service-centre<br/>(prebuilt: first 24 Defence Accounts offices)"]
+    B["Type 'pune'<br/>(250 ms pause, older request cancelled)"]
+    C["GET /api/service-centres?q=pune&type=all&offset=0"]
+    D["Server search over 10,399 rows:<br/>every word must match name, address,<br/>district, state or PIN code"]
+    E["Rank: Defence Accounts offices first, then centres<br/>located in Pune before address-only matches"]
+    F["193 found · showing 24"]
+    G["Click 'Defence Accounts offices'"]
+    H["4 found: AAO SC DEHU ROAD,<br/>PAO ORS BEG KIRKEE, PCDA O Pune,<br/>PCDA SC PUNE"]
+    M["Show more: next 24 (offset=24)"]
+
+    A --> B --> C --> D --> E --> F
+    F --> G --> H
+    F --> M
 ```
 
-The page filters in the browser as you type, without any network request. On the Hindi and Telugu pages, English city and service names still match ("Pune" finds "पुणे डेमो सहायता डेस्क"). The same filter is also available at `/api/service-centres?q=` for API clients.
+Only one page of results (24) is ever sent to the browser. The 2.3 MB list stays on the server, and API responses are cached on Netlify's CDN until the next deploy.
 
-| Query | Results |
+**Real API responses:**
+
+| Request | Result |
 | --- | --- |
-| `Pune` | Pune |
-| `family pension` | New Delhi, Lucknow |
-| `ppo` | New Delhi, Bengaluru |
-| `life` | Pune, Lucknow |
-| `Mumbai` | none → "Clear search" |
+| `?q=pune` | 193 centres, first: AAO SC DEHU ROAD |
+| `?q=pune&type=defence` | 4 Defence Accounts offices |
+| `?q=411001` | 16 centres, first: PCDA O Pune (Golibar Maidan, Pune) |
+| `?q=allahabad&type=defence` | SSC PRAYAGRAJ (old city names still match) |
+| `?type=hotel` | 400 `{"error":"Invalid option…","code":"invalid_request"}` |
 
-**Real API response for `?q=Pune`:**
+Response shape:
 
 ```json
-{"data":[{"id":"demo-pune","city":"Pune","name":"Pune demo assistance desk","address":"Illustrative location · Pune city","services":["Payment support","Life certificate"],"hours":"Sample hours: Mon–Fri, 10:00–16:00"}],"demo":true}
+{
+  "data": {
+    "total": 4,
+    "centres": [
+      {
+        "id": 102,
+        "type": "defence",
+        "name": "PCDA O Pune",
+        "address": "Golibar Maidan, Pune",
+        "district": "Pune",
+        "state": "Maharashtra",
+        "pincode": "411001",
+        "phone": "8871215097"
+      }
+    ]
+  },
+  "source": { "url": "https://sparsh.defencepension.gov.in/?page=serviceCentreLocator", "retrievedAt": "2026-09-29" }
+}
 ```
 
-All locations are fictional ([src/lib/centres.ts](src/lib/centres.ts)).
+Names and addresses are shown in English on every language version, exactly as SPARSH publishes them; the page labels are translated. Each card links to Google Maps, and the page asks visitors to call before travelling.
 
 ---
 
@@ -460,7 +487,7 @@ Every response also carries these security headers from [next.config.ts](next.co
 | Request checks and error responses | [src/lib/server/http.ts](src/lib/server/http.ts) |
 | Database connection | [src/lib/server/db.ts](src/lib/server/db.ts) |
 | Grievance persistence | [src/lib/server/grievances.ts](src/lib/server/grievances.ts) |
-| Service-centre data and search | [src/lib/centres.ts](src/lib/centres.ts), [src/components/centres/search.tsx](src/components/centres/search.tsx) |
+| Service-centre data and search | [scripts/update-service-centres.mjs](scripts/update-service-centres.mjs) → [src/data/service-centres.json](src/data/service-centres.json), [src/lib/service-centres.ts](src/lib/service-centres.ts), [src/components/centres/search.tsx](src/components/centres/search.tsx) |
 | Browser → API helper (12 s timeout) | [src/lib/client-api.ts](src/lib/client-api.ts) |
 | Languages, URL helpers, detection | [src/i18n/config.ts](src/i18n/config.ts), [src/proxy.ts](src/proxy.ts) |
 | Translations (en is the source) | [src/i18n/messages/en.ts](src/i18n/messages/en.ts), [hi.ts](src/i18n/messages/hi.ts), [te.ts](src/i18n/messages/te.ts) |

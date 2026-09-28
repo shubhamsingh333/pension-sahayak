@@ -36,6 +36,7 @@ On later runs: `docker start pension-sahayak-mongo`. Do not run a second databas
 - `npm test`: validation and checklist tests
 - `npm run build`: production build
 - `npm start`: serve the production build
+- `npm run update:centres`: re-download the SPARSH service-centre list
 
 ## Deployment (Netlify)
 
@@ -65,7 +66,8 @@ Required settings:
 - `src/lib/server/db.ts`: cached MongoDB connection, pool and bounded connection timeouts
 - `src/lib/server/grievances.ts`: persistence service and explicit response projection
 - `src/lib/server/http.ts`: bounded JSON parsing, origin validation and error responses
-- `src/lib/centres.ts`: explicitly fictional directory data
+- `src/data/service-centres.json`: official SPARSH service-centre list; refresh with `npm run update:centres` (`scripts/update-service-centres.mjs`)
+- `src/lib/service-centres.ts`: directory search (all words must match; Defence Accounts offices first)
 - `tests`: validation checks (additional test cases deferred)
 
 No MongoDB connection is required at build time. Static guidance, directory and PPO demo work without MongoDB. Creating/tracking grievances requires MongoDB; failures return 503 and never report a successful save. The database and grievance collection are created lazily on the first save. Reference index creation is idempotent.
@@ -76,7 +78,7 @@ No MongoDB connection is required at build time. Static guidance, directory and 
 | ------ | --------------------------- | ----------------------------------------------------------- |
 | GET    | /api/health                 | Live DB ping; 200 connected, 503 unavailable                |
 | POST   | /api/pension                | JSON `{"ppo":"DEMO-PPO-12345"}`; mock record only           |
-| GET    | /api/service-centres?q=Pune | Filter fictional directory                                  |
+| GET    | /api/service-centres?q=Pune | Search official SPARSH service centres (`type=all|defence|bank`, `offset`) |
 | POST   | /api/grievances             | Validate and persist a demo grievance                       |
 | GET    | /api/grievances/:reference  | Return status/category/date only; no subject or description |
 
@@ -98,7 +100,7 @@ Grievance references contain 128 random bits and act as bearer references. There
 
 - Responsive mobile/tablet/desktop layouts, keyboard focus, skip link, larger text control, semantic forms and status messages.
 - Five guided pension workflows, branch/status-aware checklists and text downloads.
-- Demo PPO lookup and searchable fictional service-centre directory.
+- Demo PPO lookup and searchable official SPARSH service-centre directory.
 - MongoDB-backed grievance creation and tracking; status remains Received until a future case-management layer exists.
 - No government APIs, real PPO validation, uploads, payments, appointment booking, authentication or AI chatbot.
 - All workflow instructions are illustrative, not legal advice or confirmed eligibility/document requirements.

@@ -9,7 +9,6 @@ import { format, plural } from "../src/i18n/format";
 import { en } from "../src/i18n/messages/en";
 import { hi } from "../src/i18n/messages/hi";
 import { te } from "../src/i18n/messages/te";
-import { filterCentres, localizeCentres } from "../src/lib/centres";
 import { apiErrorCodes } from "../src/lib/api-errors";
 
 test("preferred locale: saved cookie, then Accept-Language, then English", () => {
@@ -35,9 +34,10 @@ test("paths switch language and keep the rest of the route", () => {
 test("format fills placeholders and plural picks the locale's form", () => {
   assert.equal(format(en.workflow.reviewed, { count: 2, total: 5 }), "2 of 5 reviewed");
   assert.equal(format("{missing} stays", {}), "{missing} stays");
-  assert.equal(plural("en", 1, en.centreSearch.found), "1 sample centre found");
-  assert.equal(plural("en", 4, en.centreSearch.found), "4 sample centres found");
-  assert.equal(plural("te", 2, te.centreSearch.found), "2 నమూనా కేంద్రాలు కనుగొనబడ్డాయి");
+  assert.equal(plural("en", 1, en.centreSearch.found), "1 service centre found");
+  assert.equal(plural("en", 4, en.centreSearch.found), "4 service centres found");
+  assert.equal(plural("en", 10399, en.centreSearch.found), "10,399 service centres found");
+  assert.equal(plural("te", 2, te.centreSearch.found), "2 సేవా కేంద్రాలు కనుగొనబడ్డాయి");
 });
 
 /** Every key path in a dictionary, with array lengths, e.g. "home.faqs[3]". */
@@ -63,15 +63,4 @@ test("Hindi and Telugu match the English dictionary and have no empty text", () 
 test("every API error code has a translated message", () => {
   for (const dict of [en, hi, te])
     for (const code of apiErrorCodes) assert.ok(dict.errors[code], code);
-});
-
-test("centre search matches translated and English names", () => {
-  const hindi = localizeCentres(hi, [en]);
-  assert.deepEqual(filterCentres(hindi, "Pune").map((c) => c.id), ["demo-pune"]);
-  assert.deepEqual(filterCentres(hindi, "पुणे").map((c) => c.id), ["demo-pune"]);
-  assert.deepEqual(
-    filterCentres(localizeCentres(en), "family pension").map((c) => c.id),
-    ["demo-delhi", "demo-lucknow"],
-  );
-  assert.equal(filterCentres(hindi, "").length, 4);
 });

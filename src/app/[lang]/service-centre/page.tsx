@@ -1,20 +1,28 @@
 import { PageIntro } from "@/components/ui";
 import { CentreSearch } from "@/components/centres/search";
+import { intlLocales } from "@/i18n/config";
+import { format } from "@/i18n/format";
 import { getI18n } from "@/i18n/server";
-import { en } from "@/i18n/messages/en";
-import { localizeCentres } from "@/lib/centres";
+import { centreDirectory } from "@/lib/server/service-centres";
 export default async function Centres() {
   const { locale, t } = await getI18n();
-  // English names stay searchable in every language ("Pune" on the Hindi page).
-  const centres = localizeCentres(t, locale === "en" ? [] : [en]);
+  const intl = intlLocales[locale];
+  const updated = new Intl.DateTimeFormat(intl, {
+    dateStyle: "long",
+    timeZone: "UTC",
+  }).format(new Date(centreDirectory.retrievedAt));
+  const count = new Intl.NumberFormat(intl).format(centreDirectory.total);
   return (
     <div className="shell py-12">
       <PageIntro
         eyebrow={t.centresPage.eyebrow}
         title={t.centresPage.title}
-        description={t.centresPage.description}
+        description={format(t.centresPage.description, { count })}
       />
-      <CentreSearch centres={centres} />
+      <CentreSearch
+        initial={centreDirectory.search({ q: "", type: "all", offset: 0 })}
+        source={{ url: centreDirectory.source, updated }}
+      />
     </div>
   );
 }

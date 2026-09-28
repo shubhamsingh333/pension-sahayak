@@ -12,8 +12,11 @@ export function format(
   );
 }
 
-/** Chooses the plural form for the locale, then fills in {count}. */
+/** Chooses the plural form for the locale, then fills in {count} ("10,399"). */
 export function plural(locale: Locale, count: number, forms: PluralForms) {
-  const category = new Intl.PluralRules(intlLocales[locale]).select(count);
-  return format(category === "one" ? forms.one : forms.other, { count });
+  const intl = intlLocales[locale];
+  const category = new Intl.PluralRules(intl).select(count);
+  return format(category === "one" ? forms.one : forms.other, {
+    count: new Intl.NumberFormat(intl).format(count),
+  });
 }
