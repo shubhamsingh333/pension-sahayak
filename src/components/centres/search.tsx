@@ -1,36 +1,35 @@
 "use client";
 import { useState } from "react";
 import { MapPin, Clock, Search } from "lucide-react";
-import { centres } from "@/lib/centres";
-export function CentreSearch() {
+import { filterCentres, type SearchableCentre } from "@/lib/centres";
+import { useI18n } from "@/i18n/client";
+import { plural } from "@/i18n/format";
+export function CentreSearch({ centres }: { centres: SearchableCentre[] }) {
+  const { locale, t } = useI18n();
+  const text = t.centreSearch;
   const [query, setQuery] = useState("");
-  const filtered = centres.filter((c) =>
-    (c.city + " " + c.services.join(" "))
-      .toLowerCase()
-      .includes(query.trim().toLowerCase()),
-  );
+  const filtered = filterCentres(centres, query);
   return (
     <>
       <label
         htmlFor="centre-search"
         className="mb-2 block text-sm font-semibold"
       >
-        Search by city or support type
+        {text.label}
       </label>
       <div className="relative max-w-2xl">
         <Search className="absolute left-4 top-4 text-slate-400" size={20} />
         <input
           id="centre-search"
           className="control pl-12!"
-          placeholder="Try Pune, family pension or PPO support"
+          placeholder={text.placeholder}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           maxLength={80}
         />
       </div>
       <p aria-live="polite" className="my-6 text-sm text-slate-500">
-        {filtered.length} sample {filtered.length === 1 ? "centre" : "centres"}{" "}
-        found · All locations are fictional
+        {plural(locale, filtered.length, text.found)} · {text.fictional}
       </p>
       <div className="grid gap-5 md:grid-cols-2">
         {filtered.map((c) => (
@@ -40,7 +39,7 @@ export function CentreSearch() {
                 <MapPin size={23} />
               </span>
               <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800">
-                Demo location
+                {text.badge}
               </span>
             </div>
             <h2 className="mt-5 text-xl font-semibold">{c.name}</h2>
@@ -60,17 +59,16 @@ export function CentreSearch() {
               ))}
             </div>
             <p className="mt-5 border-t border-slate-100 pt-4 text-xs leading-5 text-slate-500">
-              Illustration only. Do not travel to this location. No appointment
-              or contact service is connected.
+              {text.disclaimer}
             </p>
           </article>
         ))}
       </div>
       {!filtered.length ? (
         <div className="panel">
-          <p>No sample centres match your search.</p>
+          <p>{text.empty}</p>
           <button className="btn btn-outline mt-4" onClick={() => setQuery("")}>
-            Clear search
+            {text.clear}
           </button>
         </div>
       ) : null}

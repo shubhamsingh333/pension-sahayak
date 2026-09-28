@@ -1,25 +1,21 @@
 "use client";
 import { useState } from "react";
 import { apiRequest, errorMessage } from "@/lib/client-api";
+import { DEMO_PPO, type PensionRecord } from "@/lib/demo-pension";
+import { useI18n } from "@/i18n/client";
+import { format } from "@/i18n/format";
 import { Field, Notice } from "@/components/ui";
-type RecordData = {
-  ppo: string;
-  name: string;
-  branch: string;
-  status: string;
-  lifeCertificate: string;
-};
 export function PpoLookup() {
-  const [ppo, setPpo] = useState("DEMO-PPO-12345");
-  const [data, setData] = useState<RecordData | null>(null);
+  const { t } = useI18n();
+  const text = t.ppo;
+  const [ppo, setPpo] = useState<string>(DEMO_PPO);
+  const [data, setData] = useState<PensionRecord | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   return (
     <section className="panel mt-8">
-      <h2 className="text-xl font-semibold">Explore a sample PPO record</h2>
-      <p className="mt-2 mb-5 text-sm text-slate-600">
-        This lookup uses mock data and never queries government systems.
-      </p>
+      <h2 className="text-xl font-semibold">{text.title}</h2>
+      <p className="mt-2 mb-5 text-sm text-slate-600">{text.description}</p>
       <form
         onSubmit={async (e) => {
           e.preventDefault();
@@ -27,16 +23,16 @@ export function PpoLookup() {
           setData(null);
           setBusy(true);
           try {
-            setData(await apiRequest<RecordData>("/api/pension", { ppo }));
+            setData(await apiRequest<PensionRecord>("/api/pension", { ppo }));
           } catch (e) {
-            setError(errorMessage(e));
+            setError(errorMessage(e, t.errors));
           } finally {
             setBusy(false);
           }
         }}
         className="space-y-4"
       >
-        <Field label="Demo PPO reference" id="ppo">
+        <Field label={text.label} id="ppo">
           <input
             className="control"
             id="ppo"
@@ -47,7 +43,7 @@ export function PpoLookup() {
           />
         </Field>
         <button className="btn" disabled={busy}>
-          {busy ? "Looking up…" : "Look up sample record"}
+          {busy ? text.busy : text.submit}
         </button>
       </form>
       {error ? (
@@ -59,12 +55,14 @@ export function PpoLookup() {
         <div className="mt-5">
           <Notice>
             <strong>
-              {data.name} · {data.branch}
+              {data.name} · {t.branches[data.branch]}
             </strong>
             <br />
-            {data.status}
+            {text.recordStatuses[data.status]}
             <br />
-            Life certificate: {data.lifeCertificate}
+            {format(text.lifeCertificate, {
+              value: text.lifeCertificateStatuses[data.lifeCertificate],
+            })}
           </Notice>
         </div>
       ) : null}

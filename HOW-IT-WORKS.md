@@ -26,13 +26,13 @@ flowchart LR
     FN -->|"MONGODB_URI"| DB
 ```
 
-Most pages are built once at deploy time and served from Netlify's CDN. Only the grievance page and the `/api` routes run server code, and only grievances touch the database.
+`[lang]` is `en`, `hi` or `te` (see section 12). Most pages are built once per language at deploy time and served from Netlify's CDN. Only the grievance page and the `/api` routes run server code, and only grievances touch the database.
 
 | Route | How it is served | Uses the database? |
 | --- | --- | --- |
-| `/`, `/about`, `/pension-help`, `/service-centre` | Static HTML, built at deploy time | No |
-| `/pension-help/[slug]` (5 topics) | Static HTML, one page per topic | No |
-| `/grievance` | Server-rendered per request (reads `?reference=`) | No (the page itself) |
+| `/[lang]`, `/[lang]/about`, `/[lang]/pension-help`, `/[lang]/service-centre` | Static HTML per language, built at deploy time | No |
+| `/[lang]/pension-help/[slug]` (5 topics) | Static HTML, one page per topic and language | No |
+| `/[lang]/grievance` | Server-rendered per request (reads `?reference=`) | No (the page itself) |
 | `GET /api/health` | Function | Yes (ping) |
 | `POST /api/pension` | Function | No (mock record) |
 | `GET /api/service-centres?q=` | Function | No (built-in list) |
@@ -157,11 +157,11 @@ flowchart TD
 
 | Input | Status | Response |
 | --- | --- | --- |
-| `DEMO-PPO-12345` | 200 | `{"data":{"ppo":"DEMO-PPO-12345","name":"Sample Pensioner","branch":"Army","status":"Active · demo record","lifeCertificate":"Acknowledged · illustrative","demo":true}}` |
-| `DEMO-PPO-99999` | 404 | `{"error":"No sample record found. Try DEMO-PPO-12345."}` |
-| `1234` | 400 | `{"error":"Use a demo reference such as DEMO-PPO-12345."}` |
+| `DEMO-PPO-12345` | 200 | `{"data":{"ppo":"DEMO-PPO-12345","name":"Sample Pensioner","branch":"army","status":"active","lifeCertificate":"acknowledged","demo":true}}` |
+| `DEMO-PPO-99999` | 404 | `{"error":"No sample record found. Try DEMO-PPO-12345.","code":"ppo_not_found"}` |
+| `1234` | 400 | `{"error":"Use a demo reference such as DEMO-PPO-12345.","code":"invalid_ppo"}` |
 
-This is mock data: no government system is queried.
+This is mock data: no government system is queried. `branch`, `status` and `lifeCertificate` are codes; the page shows them in the visitor's language (for example Telugu: "సైన్యం · సక్రియం · డెమో రికార్డు").
 
 ---
 
@@ -265,7 +265,7 @@ The reference is `PS-` followed by a random UUID (128 random bits) in uppercase 
 
 ```text
 POST /api/grievances  {"category":"Payment","subject":"Hi","description":"short","demoConsent":true}
-→ 400 {"error":"Use at least 5 characters for the subject."}
+→ 400 {"error":"Use at least 5 characters for the subject.","code":"invalid_subject"}
 ```
 
 ---
@@ -313,8 +313,8 @@ flowchart TD
 
 | Request | Status | Response |
 | --- | --- | --- |
-| `GET /api/grievances/abc` | 400 | `{"error":"Invalid tracking reference."}` |
-| `GET /api/grievances/PS-00000000000000000000000000000000` | 404 | `{"error":"No demo grievance found for this reference."}` |
+| `GET /api/grievances/abc` | 400 | `{"error":"Invalid tracking reference.","code":"invalid_reference"}` |
+| `GET /api/grievances/PS-00000000000000000000000000000000` | 404 | `{"error":"No demo grievance found for this reference.","code":"grievance_not_found"}` |
 
 The status always stays **Received**: there is no case-management layer or status-update endpoint in this demo.
 
@@ -335,7 +335,7 @@ flowchart LR
     F -->|"0 results"| G["'Clear search' button"]
 ```
 
-The page filters in the browser as you type, without any network request. The same filter is also available at `/api/service-centres?q=` for API clients.
+The page filters in the browser as you type, without any network request. On the Hindi and Telugu pages, English city and service names still match ("Pune" finds "पुणे डेमो सहायता डेस्क"). The same filter is also available at `/api/service-centres?q=` for API clients.
 
 | Query | Results |
 | --- | --- |
@@ -432,7 +432,7 @@ flowchart TD
 
 ## 10. Error reference
 
-All errors use the shape `{"error": "..."}`. Successful data responses use `{"data": ...}`.
+All errors use the shape `{"error": "...", "code": "..."}`. `error` is an English message for API clients; the site translates `code` using the `errors` section of each dictionary. Successful data responses use `{"data": ...}`.
 
 | Status | When | Message |
 | --- | --- | --- |
@@ -462,4 +462,54 @@ Every response also carries these security headers from [next.config.ts](next.co
 | Grievance persistence | [src/lib/server/grievances.ts](src/lib/server/grievances.ts) |
 | Service-centre data and search | [src/lib/centres.ts](src/lib/centres.ts), [src/components/centres/search.tsx](src/components/centres/search.tsx) |
 | Browser → API helper (12 s timeout) | [src/lib/client-api.ts](src/lib/client-api.ts) |
+| Languages, URL helpers, detection | [src/i18n/config.ts](src/i18n/config.ts), [src/proxy.ts](src/proxy.ts) |
+| Translations (en is the source) | [src/i18n/messages/en.ts](src/i18n/messages/en.ts), [hi.ts](src/i18n/messages/hi.ts), [te.ts](src/i18n/messages/te.ts) |
+| Loading translations | [src/i18n/server.ts](src/i18n/server.ts) (Server Components), [src/i18n/client.tsx](src/i18n/client.tsx) (Client Components) |
+| Language switcher | [src/components/layout/language-switcher.tsx](src/components/layout/language-switcher.tsx) |
+| API error codes | [src/lib/api-errors.ts](src/lib/api-errors.ts) |
 | Deploy and CI config | [netlify.toml](netlify.toml), [.github/workflows/ci.yml](.github/workflows/ci.yml) |
+
+---
+
+## 12. Languages (English, Hindi, Telugu)
+
+Every page exists in three languages under a URL prefix: `/en/…`, `/hi/…`, `/te/…`. Each version is built as static HTML, so switching language doesn't make pages any slower.
+
+```mermaid
+flowchart TD
+    V["Visitor opens /grievance"]
+    P{"proxy.ts:<br/>URL starts with en, hi or te?"}
+    C{"NEXT_LOCALE cookie<br/>(last choice)?"}
+    A{"Browser Accept-Language<br/>includes hi or te?"}
+    R["307 redirect to /te/grievance<br/>(query string kept)"]
+    PAGE["[lang] layout: html lang=te,<br/>Telugu dictionary"]
+    SW["Switcher: click हिन्दी"]
+    CK["Save NEXT_LOCALE=hi cookie"]
+    NAV["Client navigation to /hi/grievance<br/>(query and #hash kept, scroll kept)"]
+
+    V --> P
+    P -->|"yes"| PAGE
+    P -->|"no"| C
+    C -->|"yes"| R
+    C -->|"no"| A
+    A -->|"yes: that language<br/>no: English"| R
+    R --> PAGE
+    PAGE --> SW --> CK --> NAV
+```
+
+**Real example**, captured from the running app:
+
+| Request | Result |
+| --- | --- |
+| `GET /` with `Accept-Language: hi-IN,hi;q=0.9` | 307 → `/hi` |
+| `GET /` with cookie `NEXT_LOCALE=te` and `Accept-Language: hi` | 307 → `/te` (saved choice wins) |
+| `GET /grievance?reference=PS-ABC` | 307 → `/en/grievance?reference=PS-ABC` |
+| `GET /te/nope` | 404, "మిమ్మల్ని సరైన దారిలోకి తీసుకువద్దాం." |
+
+**How translations reach each component:**
+
+- **Server Components** call `getI18n()`. It reads the language from the URL with `next/root-params` and loads only that language's dictionary.
+- **Client Components** call `useI18n()`. The layout sends the browser only the parts of the dictionary that interactive components need (forms, checklist, search, errors). Page copy stays on the server.
+- **Links** use `<LocalizedLink href="/grievance">`, which adds the current language automatically.
+
+**Adding or changing text:** edit [en.ts](src/i18n/messages/en.ts) first. TypeScript then reports every key missing from `hi.ts` and `te.ts`, and `npm test` checks that no translation is empty.

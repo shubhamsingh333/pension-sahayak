@@ -1,6 +1,8 @@
 "use client";
 import { useState } from "react";
+import { useI18n } from "@/i18n/client";
 export function Accessibility() {
+  const { t } = useI18n();
   const [large, setLarge] = useState(false);
   return (
     <button
@@ -12,7 +14,8 @@ export function Accessibility() {
       }}
       className="text-sm font-semibold underline-offset-4 hover:underline"
     >
-      A{large ? "−" : "+"} <span className="sr-only">Toggle larger text</span>
+      A{large ? "−" : "+"}{" "}
+      <span className="sr-only">{t.topBar.largerText}</span>
     </button>
   );
 }

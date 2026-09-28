@@ -9,10 +9,15 @@ export async function GET(
 ) {
   try {
     const parsed = trackingSchema.safeParse((await params).reference);
-    if (!parsed.success) throw new ApiError(400, "Invalid tracking reference.");
+    if (!parsed.success)
+      throw new ApiError(400, "invalid_reference", "Invalid tracking reference.");
     const record = await findGrievance(parsed.data);
     if (!record)
-      throw new ApiError(404, "No demo grievance found for this reference.");
+      throw new ApiError(
+        404,
+        "grievance_not_found",
+        "No demo grievance found for this reference.",
+      );
     return NextResponse.json(
       { data: record },
       { headers: { "Cache-Control": "no-store" } },

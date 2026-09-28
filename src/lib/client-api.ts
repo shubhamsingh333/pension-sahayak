@@ -1,3 +1,13 @@
+import { isApiErrorCode, type ApiErrorCode } from "./api-errors";
+export type ErrorMessages = Record<ApiErrorCode | "generic", string>;
+export class ApiRequestError extends Error {
+  constructor(
+    public code: ApiErrorCode | "generic",
+    message: string,
+  ) {
+    super(message);
+  }
+}
 export async function apiRequest<T>(url: string, body?: unknown): Promise<T> {
   const response = await fetch(url, {
     method: body === undefined ? "GET" : "POST",
@@ -8,11 +18,13 @@ export async function apiRequest<T>(url: string, body?: unknown): Promise<T> {
   });
   const result = await response.json();
   if (!response.ok)
-    throw new Error(result.error ?? "The request could not be completed.");
+    throw new ApiRequestError(
+      isApiErrorCode(result.code) ? result.code : "generic",
+      result.error ?? "The request could not be completed.",
+    );
   return result.data as T;
 }
-export function errorMessage(error: unknown) {
-  return error instanceof Error
-    ? error.message
-    : "Something went wrong. Please try again.";
+/** Translated message for any failure, including network errors and timeouts. */
+export function errorMessage(error: unknown, messages: ErrorMessages) {
+  return messages[error instanceof ApiRequestError ? error.code : "generic"];
 }

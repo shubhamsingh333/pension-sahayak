@@ -1,14 +1,22 @@
 @import "tailwindcss";
 @theme {
-  --font-sans: Arial, Helvetica, sans-serif;
+  --font-sans: Arial, Helvetica, "Nirmala UI", "Noto Sans Devanagari", "Noto Sans Telugu", sans-serif;
 }
 :root {
   color-scheme: light;
 }
+/* Devanagari and Telugu letters join; tracking breaks the headline stroke and conjuncts. */
+:root:not(:lang(en)) * {
+  letter-spacing: normal;
+}
+/* Vowel signs above and below the line need more room than Latin text. */
+:root:not(:lang(en)) :is(h1, h2, h3, .page-title) {
+  line-height: 1.3;
+}
 body {
   background: #fafbf9;
   color: #142d2b;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: Arial, Helvetica, "Nirmala UI", "Noto Sans Devanagari", "Noto Sans Telugu", sans-serif;
 }
 button,
 a,

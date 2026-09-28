@@ -1,31 +1,37 @@
 "use client";
 import { useState } from "react";
-import Link from "next/link";
 import { apiRequest, errorMessage } from "@/lib/client-api";
+import { grievanceCategories, type GrievanceStatus } from "@/lib/validation";
+import { useI18n } from "@/i18n/client";
+import { format } from "@/i18n/format";
+import { LocalizedLink as Link } from "@/components/localized-link";
 import { Field, Notice } from "@/components/ui";
-type Receipt = { reference: string; status: string; createdAt: string };
+type Receipt = { reference: string; status: GrievanceStatus; createdAt: string };
 export function GrievanceForm() {
+  const { t } = useI18n();
+  const text = t.grievanceForm;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [receipt, setReceipt] = useState<Receipt | null>(null);
   return (
     <section className="panel">
-      <p className="eyebrow">Create a request</p>
-      <h2 className="mt-3 text-2xl font-semibold">Tell us what happened</h2>
+      <p className="eyebrow">{text.eyebrow}</p>
+      <h2 className="mt-3 text-2xl font-semibold">{text.title}</h2>
       <p className="mt-3 mb-6 text-sm leading-6 text-slate-600">
-        Use a fictional example. This saves a demo grievance to local MongoDB,
-        without contacting any government office.
+        {text.intro}
       </p>
       {receipt ? (
         <div className="space-y-5">
           <Notice>
-            <strong>Demo grievance saved successfully.</strong>
+            <strong>{text.savedTitle}</strong>
             <br />
-            Status: {receipt.status}
+            {format(text.statusLine, {
+              status: t.grievanceStatuses[receipt.status],
+            })}
           </Notice>
           <div className="rounded-lg bg-slate-50 p-4">
             <p className="text-xs font-semibold text-slate-500">
-              KEEP YOUR TRACKING REFERENCE
+              {text.keepReference}
             </p>
             <p
               className="mt-2 break-all font-mono text-sm"
@@ -33,22 +39,19 @@ export function GrievanceForm() {
             >
               {receipt.reference}
             </p>
-            <p className="mt-3 text-xs text-slate-500">
-              This reference gives access to the demo status. Keep a copy before
-              leaving this page.
-            </p>
+            <p className="mt-3 text-xs text-slate-500">{text.referenceHint}</p>
           </div>
           <Link
             href={"/grievance?reference=" + receipt.reference + "#track"}
             className="btn"
           >
-            Track this request
+            {text.trackThis}
           </Link>
           <button
             className="block text-sm text-teal-800 underline"
             onClick={() => setReceipt(null)}
           >
-            Create another demo request
+            {text.createAnother}
           </button>
         </div>
       ) : (
@@ -69,31 +72,27 @@ export function GrievanceForm() {
                 }),
               );
             } catch (error) {
-              setError(errorMessage(error));
+              setError(errorMessage(error, t.errors));
             } finally {
               setBusy(false);
             }
           }}
         >
-          <Field id="category" label="What is this about?">
+          <Field id="category" label={text.categoryLabel}>
             <select id="category" name="category" className="control">
-              {[
-                "Payment",
-                "Family pension",
-                "Life certificate",
-                "PPO",
-                "Other",
-              ].map((c) => (
-                <option key={c}>{c}</option>
+              {grievanceCategories.map((c) => (
+                <option key={c} value={c}>
+                  {t.categories[c]}
+                </option>
               ))}
             </select>
           </Field>
-          <Field id="subject" label="Short summary">
+          <Field id="subject" label={text.subjectLabel}>
             <input
               id="subject"
               name="subject"
               className="control"
-              placeholder="e.g. Sample pension payment delayed"
+              placeholder={text.subjectPlaceholder}
               minLength={5}
               maxLength={100}
               required
@@ -101,8 +100,8 @@ export function GrievanceForm() {
           </Field>
           <Field
             id="description"
-            label="Describe the sample issue"
-            hint="20–1,500 characters. Do not include real names, phone numbers, PPO, Aadhaar or bank details."
+            label={text.descriptionLabel}
+            hint={text.descriptionHint}
           >
             <textarea
               id="description"
@@ -112,7 +111,7 @@ export function GrievanceForm() {
               minLength={20}
               maxLength={1500}
               aria-describedby="description-hint"
-              placeholder="Describe a fictional situation to try the grievance flow."
+              placeholder={text.descriptionPlaceholder}
               required
             />
           </Field>
@@ -123,12 +122,11 @@ export function GrievanceForm() {
               name="demoConsent"
               required
             />
-            I confirm this contains fictional information only and understand
-            this is not an official grievance.
+            {text.consent}
           </label>
           {error ? <Notice error>{error}</Notice> : null}
           <button className="btn w-full" disabled={busy}>
-            {busy ? "Saving…" : "Submit demo grievance"}
+            {busy ? text.busy : text.submit}
           </button>
         </form>
       )}

@@ -1,16 +1,23 @@
-import Link from "next/link";
 import { ShieldCheck, ArrowUpRight } from "lucide-react";
+import { LocalizedLink as Link } from "@/components/localized-link";
+import { getI18n } from "@/i18n/server";
 import { Accessibility } from "./accessibility";
-export function Header() {
+import { LanguageSwitcher } from "./language-switcher";
+export async function Header() {
+  const { t } = await getI18n();
   return (
     <>
       <div className="border-b border-slate-200 bg-slate-50">
-        <div className="shell flex items-center justify-between gap-4 py-2 text-xs text-slate-600">
+        <div className="shell flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-2 text-xs text-slate-600">
           <span>
-            DAD DAY EXHIBITION <span className="mx-2 text-slate-300">|</span> A
-            pension support concept
+            {t.topBar.exhibition}
+            <span className="mx-2 hidden text-slate-300 sm:inline">|</span>
+            <span className="hidden sm:inline">{t.topBar.concept}</span>
           </span>
-          <Accessibility />
+          <div className="flex items-center gap-4">
+            <LanguageSwitcher />
+            <Accessibility />
+          </div>
         </div>
       </div>
       <header className="border-b border-slate-200 bg-white">
@@ -18,35 +25,36 @@ export function Header() {
           <Link
             href="/"
             className="flex items-center gap-3"
-            aria-label="Pension Sahayak home"
+            aria-label={t.header.homeLabel}
           >
             <span className="rounded-xl bg-teal-800 p-2.5 text-white">
               <ShieldCheck size={28} />
             </span>
             <span>
               <span className="block text-xl font-bold tracking-tight">
-                Pension Sahayak<span className="text-orange-600">.</span>
+                {t.header.brand}
+                <span className="text-orange-600">.</span>
               </span>
               <span className="block text-xs text-slate-500">
-                Here for every next step
+                {t.header.tagline}
               </span>
             </span>
           </Link>
           <nav
-            aria-label="Main navigation"
+            aria-label={t.header.navLabel}
             className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm font-semibold"
           >
             <Link className="nav-link" href="/pension-help">
-              Pension help
+              {t.header.help}
             </Link>
             <Link className="nav-link" href="/service-centre">
-              Service centres
+              {t.header.centres}
             </Link>
             <Link className="nav-link" href="/grievance">
-              Grievances
+              {t.header.grievances}
             </Link>
             <Link href="/grievance#track" className="btn btn-small btn-outline">
-              Track a request <ArrowUpRight size={15} />
+              {t.header.track} <ArrowUpRight size={15} />
             </Link>
           </nav>
         </div>

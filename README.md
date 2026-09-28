@@ -55,7 +55,10 @@ Required settings:
 
 ## Architecture
 
-- `src/app`: server-rendered pages, metadata, loading/error boundaries, route handlers
+- `src/app/[lang]`: pages in English, Hindi and Telugu (`/en`, `/hi`, `/te`), metadata, error/not-found boundaries
+- `src/app/api`: route handlers (language-neutral; errors carry a translatable `code`)
+- `src/i18n`: locale config, dictionaries (`messages/en.ts` is the source), server/client loaders
+- `src/proxy.ts`: redirects URLs without a language prefix using the saved choice or browser language
 - `src/components`: reusable layout, form, pension workflow and directory components; client boundaries only for interaction
 - `src/lib/workflows.ts`: extensible workflow definitions and checklist logic
 - `src/lib/validation.ts`: shared Zod request validation
@@ -88,7 +91,7 @@ POST grievance JSON:
 }
 ```
 
-Errors use `{ "error": "..." }`; successful data endpoints use `{ "data": ... }`.
+Errors use `{ "error": "...", "code": "..." }`; the UI shows a translated message for `code`. Successful data endpoints use `{ "data": ... }`.
 Grievance references contain 128 random bits and act as bearer references. There is no public listing or status-update endpoint. Treat references as private. This is not a substitute for authentication.
 
 ## Features and limits
@@ -97,7 +100,7 @@ Grievance references contain 128 random bits and act as bearer references. There
 - Five guided pension workflows, branch/status-aware checklists and text downloads.
 - Demo PPO lookup and searchable fictional service-centre directory.
 - MongoDB-backed grievance creation and tracking; status remains Received until a future case-management layer exists.
-- No government APIs, real PPO validation, uploads, payments, appointment booking, authentication, Hindi translation or AI chatbot.
+- No government APIs, real PPO validation, uploads, payments, appointment booking, authentication or AI chatbot.
 - All workflow instructions are illustrative, not legal advice or confirmed eligibility/document requirements.
 - MongoDB must be running separately. No in-memory fallback is used.
 - Do not enter real personal information. Before exposing publicly, add authentication/authorization, distributed rate limiting, CSRF strategy for authenticated sessions, audit logging, retention/deletion controls, deployment secrets, verified content and security review.

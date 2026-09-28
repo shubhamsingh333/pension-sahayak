@@ -1,4 +1,3 @@
-import Link from "next/link";
 import {
   HeartHandshake,
   Wallet,
@@ -6,9 +5,15 @@ import {
   FileText,
   UserRound,
   ArrowUpRight,
+  type LucideIcon,
 } from "lucide-react";
-import type { Workflow } from "@/lib/workflows";
-const icons = {
+import { LocalizedLink as Link } from "@/components/localized-link";
+import type {
+  WorkflowContent,
+  WorkflowIcon,
+  WorkflowSlug,
+} from "@/lib/workflows";
+const icons: Record<WorkflowIcon, LucideIcon> = {
   heart: HeartHandshake,
   wallet: Wallet,
   check: FileCheck2,
@@ -16,15 +21,19 @@ const icons = {
   user: UserRound,
 };
 export function ServiceCard({
-  service,
+  slug,
+  icon,
+  content,
   index,
 }: {
-  service: Workflow;
+  slug: WorkflowSlug;
+  icon: WorkflowIcon;
+  content: Pick<WorkflowContent, "title" | "description" | "tag">;
   index: number;
 }) {
-  const Icon = icons[service.icon];
+  const Icon = icons[icon];
   return (
-    <Link href={"/pension-help/" + service.slug} className="service-card group">
+    <Link href={"/pension-help/" + slug} className="service-card group">
       <div className="flex justify-between items-start">
         <span className="icon-tile">
           <Icon size={25} />
@@ -32,13 +41,13 @@ export function ServiceCard({
         <span className="text-xs font-medium text-slate-400">0{index + 1}</span>
       </div>
       <h3 className="mt-6 text-xl font-semibold tracking-tight">
-        {service.title}
+        {content.title}
       </h3>
       <p className="mt-2 text-sm leading-6 text-slate-600">
-        {service.description}
+        {content.description}
       </p>
       <div className="mt-6 flex items-center justify-between text-xs font-semibold text-teal-800">
-        <span>{service.tag}</span>
+        <span>{content.tag}</span>
         <ArrowUpRight
           size={19}
           className="transition-transform group-hover:translate-x-1 group-hover:-translate-y-1"

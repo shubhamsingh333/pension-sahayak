@@ -5,7 +5,8 @@ import {
   ppoSchema,
   trackingSchema,
 } from "../src/lib/validation";
-import { services, makeChecklist } from "../src/lib/workflows";
+import { makeChecklist } from "../src/lib/workflows";
+import { en } from "../src/i18n/messages/en";
 const valid = {
   category: "Payment",
   subject: "Sample missed payment",
@@ -40,7 +41,12 @@ test("tracking rejects malformed and query-like references", () => {
   assert.equal(trackingSchema.safeParse('{"$ne":null}').success, false);
 });
 test("checklist adapts to service and pension status", () => {
-  const items = makeChecklist(services[0], "Navy", "Pension not started");
+  const items = makeChecklist(
+    en.workflows["family-pension"].documents,
+    en.branches.navy,
+    "not-started",
+    en.checklist,
+  );
   assert(items.includes("Navy service reference (sample)"));
   assert(items.includes("Sample sanction / application acknowledgement"));
   assert(!items.includes("Sample recent pension credit reference"));

@@ -1,13 +1,17 @@
 import { z } from "zod";
+/** Stored values; the UI shows a translated label for each. */
+export const grievanceCategories = [
+  "Payment",
+  "Family pension",
+  "Life certificate",
+  "PPO",
+  "Other",
+] as const;
+export type GrievanceCategory = (typeof grievanceCategories)[number];
+export type GrievanceStatus = "Received";
 export const grievanceSchema = z
   .object({
-    category: z.enum([
-      "Payment",
-      "Family pension",
-      "Life certificate",
-      "PPO",
-      "Other",
-    ]),
+    category: z.enum(grievanceCategories),
     subject: z
       .string()
       .trim()

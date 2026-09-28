@@ -1,10 +1,11 @@
 import { notFound } from "next/navigation";
-import { services } from "@/lib/workflows";
 import { PageIntro } from "@/components/ui";
 import { WorkflowGuide } from "@/components/pension/workflow";
 import { PpoLookup } from "@/components/pension/ppo-lookup";
+import { getI18n } from "@/i18n/server";
+import { isWorkflowSlug, workflows } from "@/lib/workflows";
 export function generateStaticParams() {
-  return services.map((s) => ({ slug: s.slug }));
+  return workflows.map(({ slug }) => ({ slug }));
 }
 export default async function WorkflowPage({
   params,
@@ -12,16 +13,17 @@ export default async function WorkflowPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const workflow = services.find((s) => s.slug === slug);
-  if (!workflow) notFound();
+  if (!isWorkflowSlug(slug)) notFound();
+  const { t } = await getI18n();
+  const workflow = t.workflows[slug];
   return (
     <div className="shell py-12">
       <PageIntro
-        eyebrow="Guided pension support · demo"
+        eyebrow={t.help.workflowEyebrow}
         title={workflow.title}
         description={workflow.description}
       />
-      <WorkflowGuide workflow={workflow} />
+      <WorkflowGuide slug={slug} workflow={workflow} />
       {slug === "ppo-help" ? <PpoLookup /> : null}
     </div>
   );

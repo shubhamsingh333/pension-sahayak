@@ -1,11 +1,15 @@
 "use client";
 import { useState } from "react";
 import { apiRequest, errorMessage } from "@/lib/client-api";
+import type { GrievanceCategory, GrievanceStatus } from "@/lib/validation";
+import { useI18n } from "@/i18n/client";
+import { intlLocales } from "@/i18n/config";
+import { format } from "@/i18n/format";
 import { Field, Notice } from "@/components/ui";
 type Status = {
   reference: string;
-  status: string;
-  category: string;
+  status: GrievanceStatus;
+  category: GrievanceCategory;
   createdAt: string;
 };
 export function Tracker({
@@ -13,16 +17,18 @@ export function Tracker({
 }: {
   initialReference?: string;
 }) {
+  const { locale, t } = useI18n();
+  const text = t.tracker;
   const [reference, setReference] = useState(initialReference);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [record, setRecord] = useState<Status | null>(null);
   return (
     <section className="panel scroll-mt-6" id="track">
-      <p className="eyebrow">Already have a reference?</p>
-      <h2 className="mt-3 text-2xl font-semibold">Track your request</h2>
+      <p className="eyebrow">{text.eyebrow}</p>
+      <h2 className="mt-3 text-2xl font-semibold">{text.title}</h2>
       <p className="mt-3 mb-6 text-sm leading-6 text-slate-600">
-        Enter the tracking reference from a locally saved demo grievance.
+        {text.intro}
       </p>
       <form
         className="space-y-4"
@@ -39,13 +45,13 @@ export function Tracker({
               ),
             );
           } catch (e) {
-            setError(errorMessage(e));
+            setError(errorMessage(e, t.errors));
           } finally {
             setBusy(false);
           }
         }}
       >
-        <Field label="Tracking reference" id="tracking-reference">
+        <Field label={text.label} id="tracking-reference">
           <input
             id="tracking-reference"
             className="control font-mono text-sm"
@@ -57,7 +63,7 @@ export function Tracker({
           />
         </Field>
         <button className="btn btn-outline w-full" disabled={busy}>
-          {busy ? "Checking…" : "Check status"}
+          {busy ? text.busy : text.submit}
         </button>
       </form>
       {error ? (
@@ -68,22 +74,24 @@ export function Tracker({
       {record ? (
         <div className="mt-5">
           <Notice>
-            <strong>{record.status} · Demo request</strong>
+            <strong>
+              {format(text.resultTitle, {
+                status: t.grievanceStatuses[record.status],
+              })}
+            </strong>
             <br />
-            Category: {record.category}
+            {format(text.category, { category: t.categories[record.category] })}
             <br />
-            Saved: {new Date(record.createdAt).toLocaleString()}
-            <p className="mt-3">
-              Your request is stored locally. There is no official processing or
-              automatic status progression in this demo.
-            </p>
+            {format(text.saved, {
+              date: new Date(record.createdAt).toLocaleString(
+                intlLocales[locale],
+              ),
+            })}
+            <p className="mt-3">{text.resultNote}</p>
           </Notice>
         </div>
       ) : null}
-      <p className="mt-5 text-xs leading-6 text-slate-500">
-        No tracking reference? Create a demo request first. Lost references
-        cannot be recovered through this prototype.
-      </p>
+      <p className="mt-5 text-xs leading-6 text-slate-500">{text.footnote}</p>
     </section>
   );
 }

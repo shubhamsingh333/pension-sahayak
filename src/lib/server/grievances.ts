@@ -1,10 +1,10 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
-import type { GrievanceInput } from "@/lib/validation";
+import type { GrievanceInput, GrievanceStatus } from "@/lib/validation";
 import { getDatabase } from "./db";
 interface GrievanceRecord extends GrievanceInput {
   reference: string;
-  status: "Received";
+  status: GrievanceStatus;
   createdAt: Date;
 }
 export async function createGrievance(input: GrievanceInput) {
