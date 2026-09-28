@@ -1,0 +1,33 @@
+{
+  "source": "https://cgda.nic.in/adm/other_links/off_add.html",
+  "retrievedAt": "2026-09-29",
+  "centres": [
+    {
+      "type": "defence",
+      "name": "Office of the PCDA (Pensions), Prayagraj (Allahabad)",
+      "address": "Draupadi Ghat, Sadar Bazar, Saraswati Vihar Colony, Ashok Nagar, Prayagraj, Uttar Pradesh - 211014",
+      "district": "Prayagraj",
+      "state": "Uttar Pradesh",
+      "pincode": "211014",
+      "phone": "18001805325"
+    },
+    {
+      "type": "defence",
+      "name": "PCDA (Officers), Pune & PCDA (Southern Command), Pune",
+      "address": "PCDA (Officers): Salisbury Park Road, Old Golibar Maidan, Pune Cantonment, Pune - 411001; PCDA (Southern Command): No. 1, Finance Road, Pune - 411001",
+      "district": "Pune",
+      "state": "Maharashtra",
+      "pincode": "411001",
+      "phone": ""
+    },
+    {
+      "type": "defence",
+      "name": "PCDA, New Delhi & PCDA (R&D)",
+      "address": "Main Office: G Block, K. Kamraj Marg, New Delhi - 110001; PCDA (R&D): West Block-5, R. K. Puram, New Delhi - 110066",
+      "district": "New Delhi",
+      "state": "Delhi",
+      "pincode": "110001",
+      "phone": ""
+    }
+  ]
+}
