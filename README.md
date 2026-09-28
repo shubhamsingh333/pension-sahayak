@@ -37,20 +37,19 @@ On later runs: `docker start pension-sahayak-mongo`. Do not run a second databas
 - `npm run build`: production build
 - `npm start`: serve the production build
 
-## Deployment (Netlify + GitHub Actions)
+## Deployment (Netlify)
 
-`.github/workflows/ci-cd.yml` runs lint, tests, build and typecheck on every push and pull request to `main`. When the checks pass, it deploys with the Netlify CLI and the Next.js runtime (`netlify.toml`):
+Netlify is linked to the GitHub repository and deploys automatically using `netlify.toml` (Next.js runtime, Node 22):
 
-- push to `main`: production deploy
-- pull request from this repo: preview deploy at `pr-<number>--<site>.netlify.app`
+- push to `main`: production deploy at https://pension-sahayak.netlify.app
+- pull request: deploy preview
 
-One-time setup:
+`.github/workflows/ci.yml` runs lint, tests, build and typecheck on every push and pull request.
 
-1. Create a Netlify site that is **not** linked to Git, so Netlify does not build a second time (`netlify sites:create`, or create one in the Netlify UI). Copy its **Site ID** from Site configuration > General.
-2. In the Netlify site's environment variables, set `MONGODB_URI` to the Atlas connection string, scoped to Functions/Runtime.
-3. Create a Netlify personal access token under User settings > Applications.
-4. In the GitHub repository, add the secrets `NETLIFY_AUTH_TOKEN` and `NETLIFY_SITE_ID` (Settings > Secrets and variables > Actions).
-5. In MongoDB Atlas > Network Access, allow `0.0.0.0/0`. Netlify Functions have no fixed outbound IPs.
+Required settings:
+
+- Netlify environment variable `MONGODB_URI`: the Atlas connection string.
+- MongoDB Atlas > Network Access: allow `0.0.0.0/0` (Netlify Functions have no fixed outbound IPs).
 
 `/api/health` on the deployed site reports whether the database is reachable.
 
